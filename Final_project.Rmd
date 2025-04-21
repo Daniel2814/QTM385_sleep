@@ -1,0 +1,211 @@
+---
+title: "qtm385_final_project"
+author: "DanielNickas"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+install.packages("sandwich")
+install.packages("lmtest")
+install.packages("dplyr")
+install.packages("readr")
+
+
+
+```
+
+Optional: Grouped Mean Imputation (e.g., by chronotype)
+If you want more targeted imputation:
+
+```{r}
+
+library(sandwich)
+library(lmtest)
+library(dplyr)
+library(readr)
+
+data <- read.csv("/Users/danielnickas/Downloads/QTM385_sleep/08-exercise-regimen.csv")
+```
+
+# Step 3: Mean Imputation for Numeric Variables
+```{r}
+numeric_vars <- sapply(data, is.numeric)
+
+for (col in names(data)[numeric_vars]) {
+  data[[col]][is.na(data[[col]])] <- mean(data[[col]], na.rm = TRUE)
+}
+
+```
+
+
+```{r}
+# Step 4: Primary Outcome – TST (Total Sleep Time)
+# =======================
+model_tst <- lm(tst_post ~ treatment_group + tst_baseline + sex + chronotype +
+                  sleep_env_quality + alcohol_drug_use,
+                data = data)
+
+cat("=== Primary Outcome: TST ===\n")
+coeftest(model_tst, vcov = vcovHC(model_tst, type = "HC1"))
+```
+Primary Outcome: Total Sleep Time (TST) — ITT Regression Summary
+✅ Exercise group slept ~21 minutes more than control (p < 0.001) — statistically significant effect
+
+📈 Baseline sleep predicts post-intervention sleep (0.82 min increase per 1 min at baseline, p < 0.001)
+
+🕒 Chronotype:
+
+Intermediate types: +17 min vs. evening (p = 0.048)
+
+Morning types: +22 min vs. evening (p = 0.029)
+
+⚠️ Alcohol/drug use: Users slept ~15 min less than non-users (p = 0.033)
+
+👤 Sex effects:
+
+Male: ~4 min less than female (not significant)
+
+Other/NB: ~26 min less (marginally significant, p = 0.069)
+
+🛏️ Sleep environment quality: small positive effect (+1.5 min), not significant
+
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+# Step 5: Secondary Outcomes
+# =======================
+
+# Sleep Latency
+model_latency <- lm(latency_post ~ treatment_group + latency_baseline + sex + chronotype +
+                      sleep_env_quality + alcohol_drug_use,
+                    data = data)
+cat("\n=== Secondary Outcome: Sleep Latency ===\n")
+coeftest(model_latency, vcov = vcovHC(model_latency, type = "HC1"))
+```
+⏱️ Secondary Outcome: Sleep Latency
+✅ Exercise group fell asleep ~3.6 minutes faster than control (p < 0.001) — significant improvement
+
+📈 Baseline sleep latency strongly predicts outcome (0.81 min increase per 1 min at baseline, p < 0.001)
+
+👤 Sex (Other/NB): Slept ~5.2 min slower than females (p = 0.006) — significant
+
+Other predictors not significant:
+
+Sex (Male): +1.3 min (p = 0.16)
+
+Chronotype: not significant
+
+Sleep environment: negligible
+
+Alcohol/drug use: no significant effect
+
+```{r}
+# WASO
+model_waso <- lm(waso_post ~ treatment_group + waso_baseline + sex + chronotype +
+                   sleep_env_quality + alcohol_drug_use,
+                 data = data)
+cat("\n=== Secondary Outcome: WASO ===\n")
+coeftest(model_waso, vcov = vcovHC(model_waso, type = "HC1"))
+```
+Here’s your concise bullet-point summary for the regression on Wake After Sleep Onset (WASO):
+
+🌙 Secondary Outcome: WASO
+✅ Exercise group spent ~9.6 fewer minutes awake after falling asleep (p < 0.001) — statistically significant improvement
+
+📈 Baseline WASO is highly predictive of post-intervention WASO (0.79 min per 1 min baseline, p < 0.001)
+
+All other predictors were not statistically significant, including:
+
+Sex (Male or Other/NB)
+
+Chronotype
+
+Sleep environment quality
+
+Alcohol/drug use
+
+The result supports your hypothesis: exercise significantly reduces nighttime wakefulness, with a sizable effect.
+
+```{r}
+# Sleep Efficiency
+model_efficiency <- lm(efficiency_post ~ treatment_group + efficiency_baseline + sex + chronotype +
+                         sleep_env_quality + alcohol_drug_use,
+                       data = data)
+cat("\n=== Secondary Outcome: Sleep Efficiency ===\n")
+coeftest(model_efficiency, vcov = vcovHC(model_efficiency, type = "HC1"))
+
+# Number of Awakenings
+model_awakenings <- lm(awakenings_post ~ treatment_group + awakenings_baseline + sex + chronotype +
+                         sleep_env_quality + alcohol_drug_use,
+                       data = data)
+cat("\n=== Secondary Outcome: Number of Awakenings ===\n")
+coeftest(model_awakenings, vcov = vcovHC(model_awakenings, type = "HC1"))
+```
+
+🟩 Secondary Outcome: Sleep Efficiency
+✅ Exercise group had +3.5 percentage point higher efficiency compared to control (p < 0.001) — statistically significant and meaningful
+
+📈 Baseline efficiency strongly predicts outcome (β = 0.74, p < 0.001)
+
+All other covariates (sex, chronotype, sleep environment, alcohol/drugs) were not statistically significant
+
+🔁 Secondary Outcome: Number of Awakenings
+✅ Exercise group experienced ~0.42 fewer awakenings per night (p < 0.001) — significant improvement
+
+📈 Strong baseline effect: previous awakening counts predict future awakenings (β = 0.95, p < 0.001)
+
+All other covariates showed no significant effects
+
+
+```{r}
+# Step 6: Moderation Effects
+# =======================
+
+# Interaction: Treatment × Chronotype
+model_interaction_chronotype <- lm(tst_post ~ treatment_group * chronotype + tst_baseline +
+                                     sex + sleep_env_quality + alcohol_drug_use,
+                                   data = data)
+cat("\n=== Interaction: Treatment × Chronotype ===\n")
+coeftest(model_interaction_chronotype, vcov = vcovHC(model_interaction_chronotype, type = "HC1"))
+
+# Interaction: Treatment × Sleep Environment
+model_interaction_env <- lm(tst_post ~ treatment_group * sleep_env_quality + tst_baseline +
+                              sex + chronotype + alcohol_drug_use,
+                            data = data)
+cat("\n=== Interaction: Treatment × Sleep Environment Quality ===\n")
+coeftest(model_interaction_env, vcov = vcovHC(model_interaction_env, type = "HC1"))
+
+# Interaction: Treatment × Alcohol/Drug Use
+model_interaction_alcohol <- lm(tst_post ~ treatment_group * alcohol_drug_use + tst_baseline +
+                                  sex + chronotype + sleep_env_quality,
+                                data = data)
+cat("\n=== Interaction: Treatment × Alcohol/Drug Use ===\n")
+coeftest(model_interaction_alcohol, vcov = vcovHC(model_interaction_alcohol, type = "HC1"))
+```
+
+🔀 Interaction: Treatment × Chronotype
+Exercise was most effective for Morning types:
+
+treatment_group:chronotypeMorning = +35.3 minutes, marginally significant (p = 0.070)
+
+Intermediate types showed no significant moderation
+
+🧠 Interpretation: Contrary to your hypothesis, morning types may benefit more than evening types
+
+✅ Main effect of tst_baseline and alcohol/drug use still strong and significant
+
+🌿 Interaction: Treatment × Sleep Environment Quality
+Interaction term (treatment_group:sleep_env_quality) = not significant (p = 0.56)
+
+Suggests no meaningful moderation by sleep environment quality
+
+🧠 Interpretation: Exercise’s effect on TST appears consistent across different sleep environments
+
+🍷 Interaction: Treatment × Alcohol/Drug Use
+treatment_group:alcohol_drug_use = –21.1 minutes (p = 0.117) — not statistically significant, but large and directionally consistent
+
+🧠 Interpretation: Participants who reported frequent alcohol/drug use may benefit less from exercise — supports hypothesis, but needs more power to confirm
+
+
+
