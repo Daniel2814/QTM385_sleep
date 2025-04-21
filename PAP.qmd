@@ -1,7 +1,8 @@
 ---
 title: Daily Exercise Regimens and Quality Sleep?
 author: Howie, Daniel, Max
-format: html
+format: pdf
+
 bibliography: references.bib
 ---
 # Research Question:
