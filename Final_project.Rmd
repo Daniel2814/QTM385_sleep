@@ -208,4 +208,48 @@ treatment_group:alcohol_drug_use = –21.1 minutes (p = 0.117) — not statistic
 🧠 Interpretation: Participants who reported frequent alcohol/drug use may benefit less from exercise — supports hypothesis, but needs more power to confirm
 
 
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+
+```
+
+```{r}
+ggplot(data, aes(x = chronotype, y = tst_post, fill = factor(treatment_group))) +
+  geom_boxplot(position = position_dodge(0.8)) +
+  labs(
+    title = "TST by Treatment and Chronotype",
+    x = "Chronotype",
+    y = "Total Sleep Time (minutes)",
+    fill = "Treatment Group"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data, aes(x = sleep_env_quality, y = tst_post, color = factor(treatment_group))) +
+  geom_point(alpha = 0.4) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "TST by Sleep Environment Quality and Treatment",
+    x = "Sleep Environment Quality",
+    y = "Total Sleep Time (minutes)",
+    color = "Treatment Group"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data, aes(x = factor(alcohol_drug_use), y = tst_post, fill = factor(treatment_group))) +
+  geom_boxplot(position = position_dodge(0.8)) +
+  labs(
+    title = "TST by Alcohol/Drug Use and Treatment",
+    x = "Alcohol/Drug Use (0 = Low/None, 1 = Mod/High)",
+    y = "Total Sleep Time (minutes)",
+    fill = "Treatment Group"
+  ) +
+  theme_minimal(
+```
 
